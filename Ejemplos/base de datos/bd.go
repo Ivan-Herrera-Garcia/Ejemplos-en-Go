@@ -31,6 +31,8 @@ func main() {
 	defer db.Close()
 	selectversion()
 
+	leerinfo()
+
 }
 
 func selectversion() {
@@ -48,5 +50,43 @@ func selectversion() {
 		log.Fatal("Scan failed ", err.Error())
 	}
 	fmt.Printf("%s\n", result)
+
+}
+
+func leerinfo() (int, error) {
+	ctx := context.Background()
+
+	err := db.PingContext(ctx)
+
+	if err != nil {
+		log.Fatal("Error pinging database: " + err.Error())
+	}
+	tsql := fmt.Sprintf("select num_control, nombre, edad from INFORMACION;")
+
+	rows, err := db.QueryContext(ctx, tsql)
+	if err != nil {
+		log.Fatal("Error reading rows: " + err.Error())
+		return -1, err
+	}
+
+	defer rows.Close()
+
+	var count int = 0
+
+	for rows.Next() {
+		var numcontrol, nombre string
+		var edad int
+
+		err := rows.Scan(&numcontrol, &nombre, &edad)
+		if err != nil {
+			log.Fatal("Error reading rows: " + err.Error())
+			return -1, err
+		}
+
+		fmt.Printf("Numero control: %s, Nombre: %s, Edad: %d\n", numcontrol, nombre, edad)
+		count++
+
+	}
+	return count, nil
 
 }
